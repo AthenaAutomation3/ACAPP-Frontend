@@ -114,9 +114,9 @@ useEffect(() => {
     
           socketRef.current.onmessage = async (event) => {
             const data = JSON.parse(event.data);
-            console.log("Exterem:",data.Extreme_shift);
+            console.log("Exterem:",data.ExtremeShift);
            
-            setExtremeShift(data.Extreme_shift);
+            setExtremeShift(data.ExtremeShift);
           } 
   }
 }
