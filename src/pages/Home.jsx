@@ -14,6 +14,7 @@ import { saveAs } from 'file-saver';
 import { red } from '@mui/material/colors';
 import { rgbToHex } from '@mui/material';
 
+
 export default function Home() {
     
     function sleep(ms) {
@@ -21,10 +22,15 @@ export default function Home() {
     }
 
     const { Page, setPage, userCredentials, setUserCredentials } = React.useContext(AppContext);
-    setPage("Calibration");
+   
     const [isPopupVisible, setPopupVisible] = useState(true);
     const [popupType, setPopupType] = useState(""); // "change_tool" or "add_reason"
     const socketRef = useRef(null);
+    const [isZeroCalibrationTriggered, setIsZeroCalibrationTriggered] = useState(false);
+    const [isHighCalibrationTriggered, setIsHighCalibrationTriggered] = useState(false);
+    const [isLowCalibrationTriggered, setIsLowCalibrationTriggered] = useState(false);
+    const [isMediumCalibrationTriggered, setIsMediumCalibrationTriggered] = useState(false);
+    const [isSuccessCalibrationTriggered, setIsSuccessCalibrationTriggered] = useState(false);
     const [Success, setSuccess] = useState(false);
 
     const [mypopup, setmypopup] = useState(false);
@@ -35,7 +41,7 @@ export default function Home() {
     const [approvetool, setapprovetoll] = useState("");
     const [selectedValue, setSelectedValue] = useState("");
     const [customOption, setCustomOption] = useState("");
-    const [options] = useState(["Reason1", "Reason2", "Reason3", "Reason4", "custom"]);
+    const [options] = useState(["Hard Material", "Excessive Allowance", "Previous Tool Broken", "Tool Worn-out", "custom"]);
     const [popMessage, setPopMessage] = useState({
         title: "Loading",
         message: "Please wait..."
@@ -53,6 +59,7 @@ export default function Home() {
     const [customReason, setCustomReason] = useState("");
     const [tools, setTools] = useState([]);
     const prevToolStatusRef = useRef({});
+   
 
 
 
@@ -85,6 +92,10 @@ export default function Home() {
             // console.log(id_readings, od_readings);
         }
     }
+    useEffect(()=>{
+        setPage("Calibration");
+
+    },[])
     useEffect(() => {
         async function setUp() {
             const data = await fetch('http://localhost:3006/Calibration');
@@ -94,16 +105,17 @@ export default function Home() {
             localStorage.setItem('SetUpMode', "False");
         }
         setUp();
-    })
+    },[])
     useEffect(() => {
 
         if (!ID_Readings.length || !OD_Readings.length) {
             console.log("Data Fetched..")
             fetchReadings();
         }
-    })
+    },[ID_Readings,OD_Readings])
    const updateReason = async () => {
     try {
+      
         const response = await fetch("http://localhost:3006/updateReason", {
             method: "PUT", 
         });
@@ -118,144 +130,163 @@ export default function Home() {
     }
 };
 
-    useEffect(() => {
-        if (!socketRef.current) { // Prevent multiple connections
-          socketRef.current = new WebSocket("ws://localhost:3006/ws");
-    
-          socketRef.current.onmessage = async (event) => {
-            const data = JSON.parse(event.data);
-            setReason(data.Reason);
-            if (data.ZERO !== "True") {
-              setPopMessage({
-                title: "Zero Calibration",
-                message: "Put Zero Calibration Master in Gauge",
-              });
-              setProgress(32);
-              setPopupVisible(true);
-              setShowProgress(true);
-              return;
-            }
-    
-            
-            if (data.HIGH !== "True") {
-              setPopMessage({
-                title: "High Calibration",
-                message: "Put High Calibration Master in Gauge",
-              });
-              setProgress(48);
-              setPopupVisible(true);
-              setShowProgress(true);
-              return;
-            }
-    
-            if (data.LOW !== "True") {
-              setPopMessage({
-                title: "Low Calibration",
-                message: "Put Low Calibration Master in Gauge",
-              });
-              setProgress(64);
-              setPopupVisible(true);
-              setShowProgress(true);
-              return;
-            }
-    
-            if (data.MEDIUM !== "True") {
-              setPopMessage({
-                title: "Medium Calibration",
-                message: "Put Medium Calibration Master in Gauge",
-              });
-              setProgress(80);
-              setPopupVisible(true);
-              setShowProgress(true);
-              return;
-            }
-            
-    
-            if (data.START !== "True") {
-              console.log("Success Before", Success);
-              setPopMessage({
-                title: "SUCCESS",
-                message: "Calibration Successful",
-              });
-              setProgress(100);
-              setShowProgress(true);
-              setPopupVisible(true);
-              await fetch("http://localhost:3006/Start");
-              return;
-            } else {
-              setPopupVisible(false);
-              setSuccess(true);
-    
-              if (data.TOOL_BROKEN === "True") {
-                setSuccess(false);
-                setPopMessage({
-                  title: "TOOL BROKEN",
-                  message: (
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => {
-                        fetch("http://localhost:3006/Tool");
-                        setPopupVisible(false);
-                        setSuccess(true);
-                      }}
-                    >
-                      TOOL FIXED!
-                    </button>
-                  ),
-                });
-    
-                setShowProgress(false);
-                setPopupVisible(true);
-                return;
-              }
-            }
+ 
+  
 
-            if(data.Reason==="True"){
-                setPopMessage({
-                    title: "Add Reason",
-                                message: (
-                                    <>
-                                        <button
-                                            className="btn btn-danger mr-[20px]"
-                                            onClick={updateReason} 
-                                            style={{width:"100px",height:"60px" }}
-                                        >
-                                            OK
-                                        </button>
-                                    </>
-                                ),
-                  });
-                //   setProgress(80);
-                  setPopupVisible(true);
-                  setShowProgress(false);
-                  return;
-
-              }
-            
-
-
+useEffect(() => {
     
-              if (data.NEW_ENTRY === "True") {
-                setNEW_ENTRY(true);
-                fetchReadings();
-                return;
-              }
-              return;
-            }
-          }
-    
-          socketRef.current.onclose = () => {
-            console.log("WebSocket closed");
-          };
+    if (!socketRef.current) { // Prevent multiple connections
+      socketRef.current = new WebSocket("ws://localhost:3006/ws");
+
+      socketRef.current.onmessage = async (event) => {
+        const data = JSON.parse(event.data);
+        setReason(data.Reason);
         
-    
-        return () => {
-          if (socketRef.current) {
-            socketRef.current.close();
-            socketRef.current = null; // Reset ref
+
+        if (data.ZERO === "False" && !isZeroCalibrationTriggered) {
+          setPopMessage({
+            title: "Zero Calibration",
+            message: "Put Zero Calibration Master in Gauge",
+          });
+          setProgress(32);
+          setPopupVisible(true);
+          setShowProgress(true);
+          setIsZeroCalibrationTriggered(true); 
+          return;
+        }
+
+        
+        if (data.HIGH === "False" && !isHighCalibrationTriggered) {
+          setPopMessage({
+            title: "High Calibration",
+            message: "Put High Calibration Master in Gauge",
+          });
+          setProgress(48);
+          setPopupVisible(true);
+          
+          setShowProgress(true);
+          setIsHighCalibrationTriggered(true);
+          return;
+        }
+
+        if (data.LOW === "False" && !isLowCalibrationTriggered)  {
+          setPopMessage({
+            title: "Low Calibration",
+            message: "Put Low Calibration Master in Gauge",
+          });
+          setProgress(64);
+          setPopupVisible(true);
+          setShowProgress(true);
+          setIsLowCalibrationTriggered(true);
+          return;
+        }
+
+        if (data.MEDIUM === "False"  && !isMediumCalibrationTriggered) {
+          setPopMessage({
+            title: "Medium Calibration",
+            message: "Put Medium Calibration Master in Gauge",
+          });
+          setProgress(80);
+          setPopupVisible(true);
+          setShowProgress(true);
+          setIsMediumCalibrationTriggered(true);
+          return;
+        }
+        
+
+        if (data.START === "False" && !isSuccessCalibrationTriggered) {
+          console.log("Success Before", Success);
+          setPopMessage({
+            title: "SUCCESS",
+            message: "Calibration Successful",
+          });
+          setProgress(100);
+          setShowProgress(true);
+          setPopupVisible(true);
+          setIsSuccessCalibrationTriggered(true);
+          await fetch("http://localhost:3006/Start");
+          return;
+        } else {
+          setPopupVisible(false);
+          setSuccess(true);
+
+          if (data.TOOL_BROKEN === "True") {
+            setSuccess(false);
+            setPopMessage({
+              title: "TOOL BROKEN",
+              message: (
+                <button
+                  className="btn btn-danger"
+                  onClick={() => {
+                    fetch("http://localhost:3006/Tool");
+                    setPopupVisible(false);
+                    setSuccess(true);
+                  }}
+                >
+                  TOOL FIXED!
+                </button>
+              ),
+            });
+
+            setShowProgress(false);
+            setPopupVisible(true);
+            setIsSuccessCalibrationTriggered(true);
+            return;
           }
-        };
-      }, []);
+        }
+        console.log("ZEROVALUE",data.ZERO);
+        if(data.Reason==="True"){
+           setPopMessage({
+                title: "Add Reason",
+                    message: (
+                        <>
+                            <button
+                                className="btn btn-danger mr-[20px]"
+                                onClick={()=>{updateReason();
+                                    setPopupVisible(false);
+                                   
+                                     
+                                }} 
+                                
+                                style={{width:"100px",height:"60px" }}
+                            >
+                                OK
+                            </button>
+                        </>
+                    ),
+                    });
+                    setProgress(0);
+                    setPopupVisible(true);
+                    setShowProgress(false);
+                    return;
+
+  }
+  console.log("ZEROVALUE",data.ZERO);
+          if (data.NEW_ENTRY === "True") {
+            setNEW_ENTRY(true);
+            fetchReadings();
+            return;
+          }
+
+          
+}
+      }
+      return()=>{
+        if(socketRef.current.readyState===WebSocket.OPEN){
+            socketRef.current.close();
+        }
+      }
+  },[]);
+
+  useEffect(()=>{
+    setIsZeroCalibrationTriggered(false);
+    setIsLowCalibrationTriggered(false);
+    setIsHighCalibrationTriggered(false);
+    setIsMediumCalibrationTriggered(false);
+    setIsSuccessCalibrationTriggered(false);
+
+  },[])
+
 
   useEffect(()=>
     {
@@ -269,116 +300,118 @@ export default function Home() {
                 const toolStatus = JSON.parse(event.data);
                 
                 // ✅ Prevent duplicate logs by checking if status changed
-                if (JSON.stringify(toolStatus) === JSON.stringify(prevToolStatusRef.current)) {
-                    return; // Exit if data is the same (avoiding unnecessary processing)
-                }
+if (JSON.stringify(toolStatus) === JSON.stringify(prevToolStatusRef.current)) {
+    return; // Exit if data is the same (avoiding unnecessary processing)
+}
 
-                prevToolStatusRef.current = toolStatus;
-                console.log("Toolstatus Received from WebSocket:", toolStatus);
+prevToolStatusRef.current = toolStatus;
+console.log("Toolstatus Received from WebSocket:", toolStatus);
 
-               // Handle popup conditions
-             if (toolStatus.Tool2 === "True") {
-                setmypopup(true);
-                setShowProgress(false);
-                setPopMessage({
-                    title: "Check Roughing Insert",
-                    message: (
-                        <>
-                            <button
-                                className="btn btn-danger mr-[20px]"
-                                onClick={() => {
-                                    setmypopup(false);  // Close popup
-                                    setTimeout(async () => {
-                                        await fetch("http://localhost:3006/updateTool2")
-                                            .then(res => res.json())
-                                            .then(data => console.log("API Response:", data))
-                                            .catch(error => console.error("Fetch Error:", error));
-                                    }, 100); // Delay to ensure state change is processed
-                                }}
-                                
-                                style={{ margin: "50px" }}
-                            >
-                                Changed
-                            </button>
-                            <button
-                                className="btn btn-danger mr-[20px]"
-                                onClick={() => {
-                                    fetch("http://localhost:3006/stillokTool2");
-                                    setmypopup(false);
-                                }}
-                            >
-                                Still OK!!
-                            </button>
-                        </>
-                    ),
-                });
-             } else if (toolStatus.Tool3 === "True") {
-                setmypopup(true);
-                setShowProgress(false);
-                setPopMessage({
-                    title: "Check SemiFinish",
-                    message: (
-                        <>
-                            <button
-                                className="btn btn-danger mr-[20px]"
-                                onClick={() => {
-                                 
-                                    fetch("http://localhost:3006/updateTool3");
-                                    setmypopup(false)
-                                   
-                                }}
-                                style={{ margin: "50px" }}
-                            >
-                                Changed
-                            </button>
-                            <button
-                                className="btn btn-danger mr-[20px]"
-                                onClick={() => {
-                                    console.log("Closing popup...");
-                                    setmypopup(false);  // Close popup
-                                    setTimeout(() => {
-                                        fetch("http://localhost:3006/stillokTool3")
-                                            .then(res => res.json())
-                                            .then(data => console.log("API Response:", data))
-                                            .catch(error => console.error("Fetch Error:", error));
-                                    }, 100); // Delay to ensure state change is processed
-                                }}
-                            >
-                                Still OK!!
-                            </button>
-                        </>
-                    ),
-                });
-             } else if (toolStatus.Tool8 === "True") {
-                setmypopup(true);
-                setShowProgress(false);
-                setPopMessage({
-                    title: "Check Insert Indexing",
-                    message: (
-                        <>
-                            <button
-                                className="btn btn-danger mr-[20px]"
-                                onClick={() => {
-                                    fetch("http://localhost:3006/updateTool8");
-                                    setmypopup(false);
-                                }}
-                                style={{ margin: "50px" }}
-                            >
-                                Changed
-                            </button>
-                            <button
-                                className="btn btn-danger mr-[20px]"
-                                onClick={() => {
-                                    fetch("http://localhost:3006/stillokTool8");
-                                    setmypopup(false);
-                                }}
-                            >
-                                Still OK!!
-                            </button>
-                        </>
-                    ),
-                });
-             }
+
+// Handle popup conditions
+if (toolStatus.Tool2 === "True") {
+setmypopup(true);
+setShowProgress(false);
+setPopMessage({
+    title: "Check Roughing Insert",
+    message: (
+        <>
+            <button
+                className="btn btn-danger mr-[20px]"
+                onClick={() => {
+                    setmypopup(false);  // Close popup
+                    setTimeout(async () => {
+                        await fetch("http://localhost:3006/updateTool2")
+                            .then(res => res.json())
+                            .then(data => console.log("API Response:", data))
+                            .catch(error => console.error("Fetch Error:", error));
+                    }, 100); // Delay to ensure state change is processed
+                }}
+                
+                style={{ margin: "50px" }}
+            >
+                Changed
+            </button>
+            <button
+                className="btn btn-danger mr-[20px]"
+                onClick={() => {
+                    fetch("http://localhost:3006/stillokTool2");
+                    setmypopup(false);
+                }}
+            >
+                Still OK!!
+            </button>
+        </>
+    ),
+});
+} else if (toolStatus.Tool3 === "True") {
+setmypopup(true);
+setShowProgress(false);
+setPopMessage({
+    title: "Check SemiFinish",
+    message: (
+        <>
+            <button
+                className="btn btn-danger mr-[20px]"
+                onClick={() => {
+                 
+                    fetch("http://localhost:3006/updateTool3");
+                    setmypopup(false)
+                   
+                }}
+                style={{ margin: "50px" }}
+            >
+                Changed
+            </button>
+            <button
+                className="btn btn-danger mr-[20px]"
+                onClick={() => {
+                    console.log("Closing popup...");
+                    setmypopup(false);  // Close popup
+                    setTimeout(() => {
+                        fetch("http://localhost:3006/stillokTool3")
+                            .then(res => res.json())
+                            .then(data => console.log("API Response:", data))
+                            .catch(error => console.error("Fetch Error:", error));
+                    }, 100); // Delay to ensure state change is processed
+                }}
+            >
+                Still OK!!
+            </button>
+        </>
+    ),
+});
+} else if (toolStatus.Tool8 === "True") {
+setmypopup(true);
+setShowProgress(false);
+setPopMessage({
+    title: "Check Insert Indexing",
+    message: (
+        <>
+            <button
+                className="btn btn-danger mr-[20px]"
+                onClick={() => {
+                    fetch("http://localhost:3006/updateTool8");
+                    setmypopup(false);
+                }}
+                style={{ margin: "50px" }}
+            >
+                Changed
+            </button>
+            <button
+                className="btn btn-danger mr-[20px]"
+                onClick={() => {
+                    fetch("http://localhost:3006/stillokTool8");
+                    setmypopup(false);
+                }}
+            >
+                Still OK!!
+            </button>
+        </>
+    ),
+});
+}
+               
             }
     
 
@@ -563,10 +596,10 @@ useEffect(() => {
                             onChange={(e) => updatePopMessage(e.target.value)}
                         >
                             <option value="">Select Reason</option>
-                            <option value="reason1">Reason 1</option>
-                            <option value="reason2">Reason 2</option>
-                            <option value="reason3">Reason 3</option>
-                            <option value="reason4">Reason 4</option>
+                            <option value="Hard Material">Hard Material</option>
+                            <option value="Excessive Allowance">Excessive Allowance</option>
+                            <option value="Previous Tool Broken">Previous Tool Broken</option>
+                            <option value="Tool Worn-out">Tool Worn-out</option>
                             <option value="Custom">Custom</option>
                         </select>
                     </div>
@@ -637,12 +670,12 @@ useEffect(() => {
                 alert("Error adding reason.");
             }
         }
-        console.log("reason ahe",reasonToSend);
+        
 
         if(popupType==="change_tool"){
            if(reasonToSend==="tool2"){
                 await fetch("http://localhost:3006/Tool2");
-                console.log("Tool2cha ahe");
+                
         
             };
             if(reasonToSend==="tool3"){
@@ -689,7 +722,7 @@ useEffect(() => {
         )
     }
     return (
-        <div className="p-3 pb-0 height-fluid position-relative" style={{ minWidth: "75%" }}>
+        <div className="p-3 pb-0 position-relative" style={{ minWidth: "75%" ,Height:'100%'}}>
             <div className="container text-center dimmed-background ">
                 {/* <button onClick={togglePopup} className="btn btn-primary">Toggle Pop-up</button> */}
 
@@ -743,8 +776,8 @@ useEffect(() => {
 
             {/* {ID_Readings && <Chart Readings={ID_Readings}></Chart>} */}
             {/* {OD_Readings && <Chart Readings={OD_Readings}></Chart>}       */}
-            {Success && <FullWidthTabs width="fluid" height="" id_readings={ID_Readings} od_readings={OD_Readings} />}
-            {!isPopupVisible && (
+            {Success && <FullWidthTabs width="fluid" height="" id_readings={ID_Readings} od_readings={OD_Readings} handlechangedTool={handlechangedTool} handleAddReasons={handleAddReasons} />}
+            {/* {!isPopupVisible && (
 
                 <>
                     <div style={{ display: "flex", marginLeft: "-150px", justifyContent: "center", gap: "20px", marginTop: "-40px" }}>
@@ -785,14 +818,14 @@ useEffect(() => {
                             }}
                             onClick={handleAddReasons}
                         >
-                            ADD REASONS
+                            ADD REASON
                         </button>
                     </div>
 
 
                 </>
 
-            )}
+            )} */}
             {ispopupvisiblemsg && (
                 <div
                     style={{

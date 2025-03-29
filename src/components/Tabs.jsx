@@ -133,8 +133,9 @@ reqdata();
   // };
   
   return (
+    <>
     <Box sx={() => ({
-      bgcolor: 'background.paper',  width: '100%',padding: "0px 0px 0px 0px",
+      bgcolor: 'background.paper', minHeight:screen,  width: '100%',padding: "0px 0px 0px 0px",
     })} >
       <AppBar position="static">
         <Tabs sx={() => ({ bgcolor: "#212529", color: "white", borderBlockColor: "white", [`& .MuiTabs-indicator`]: { bgcolor: "#dc3545" } })}
@@ -231,6 +232,7 @@ reqdata();
     })()}
 
   </p>
+  
 </TabPanel>
 
       <TabPanel value={value} index={1} dir={theme.direction}>
@@ -243,8 +245,12 @@ reqdata();
         CURRENT OD READING&nbsp;&nbsp;:&nbsp; {Math.round(props.od_readings[props.od_readings.length-1]*1000)/1000}
         </span>
         </p>
-      
-      </TabPanel>
+       
+      </TabPanel>      
+                    
+
+
+                
       {/* {extremeshift ?  <ScrollingWarning/> : <div
       style={{
         top: "50px",
@@ -256,11 +262,9 @@ reqdata();
       }}
     ></div>} */}
 
-    {extremeshift === "True" && (
-      <ScrollingWarning/>
-    )}
+   
 
-{extremeshift === "False" && (
+{/* {extremeshift === "False" && (
      <>
      <div
       style={{
@@ -275,6 +279,54 @@ reqdata();
 
      
      </>
+    )} */}
+    <div style={{ display: "flex", marginLeft: "-150px", justifyContent: "center", gap: "20px", marginTop: "60px" }}>
+     <button className='text-center text-dark pb-3 mb-0'
+         style={{
+             height: "32px",
+             padding: "5px 15px",
+             backgroundColor: "#DC3545",
+             fontWeight: "500",
+             color: "black",
+             marginTop: "-50px",
+             border: "none",
+             borderRadius: "20px",
+             cursor: "pointer",
+             fontSize: "14px",
+             position: "absolute",
+             textAlign: "center",
+         }}
+         onClick={props.handlechangedTool}
+     >
+         CHANGE TOOL
+     </button>
+
+     <button className='text-center text-dark pb-3 mb-0'
+         style={{
+             height: "32px",
+             width: "150px",
+             padding: "5px 15px",
+             backgroundColor: "#DC3545",
+             color: "black",
+             marginTop: "-50px",
+             border: "none",
+             borderRadius: "20px",
+             cursor: "pointer",
+             fontSize: "14px",
+             fontWeight: "500",
+             textAlign: "center",
+             position: "absolute",
+             marginLeft: "350px"
+         }}
+         onClick={props.andleAddReasons}
+     >
+         ADD REASON
+     </button>
+ </div>
+
+
+ {extremeshift === "True" && (
+      <ScrollingWarning/>
     )}
 
 
@@ -282,5 +334,7 @@ reqdata();
    
 
     </Box>
+     
+ </>
 );
 }

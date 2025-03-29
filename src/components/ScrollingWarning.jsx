@@ -4,7 +4,7 @@ const ScrollingWarning = () => {
   return (
     <div
       style={{
-        top: "50px",
+     
         height: "50px",
         overflow: "hidden",
         position: "relative",
@@ -23,7 +23,7 @@ const ScrollingWarning = () => {
           animation: "scroll-left 15s linear infinite",
         }}
       >
-        Warning: Hard Material.....
+        Warning: Hard Material
       </p>
       <style>
         {`
