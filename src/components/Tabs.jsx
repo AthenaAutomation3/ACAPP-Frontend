@@ -318,7 +318,7 @@ reqdata();
              position: "absolute",
              marginLeft: "350px"
          }}
-         onClick={props.andleAddReasons}
+         onClick={props.handleAddReasons}
      >
          ADD REASON
      </button>
