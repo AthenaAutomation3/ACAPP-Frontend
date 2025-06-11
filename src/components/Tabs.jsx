@@ -19,8 +19,6 @@ import StatsCards from './StatsCards';
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
   
-  
-
   return (
     <div
       role="tabpanel"
@@ -52,17 +50,13 @@ function a11yProps(index) {
 }
 
 export default function FullWidthTabs(props) {
-  const socketRef = useRef(null);
 
- 
+  const socketRef = useRef(null);
   const theme = useTheme();
   const [value, setValue] = React.useState(0);
   const [extremeshift,setExtremeShift]=React.useState();
-  
   const [LSL, setLSL] = React.useState(0);
-  // const [extremeleft,setextremeleft]=useState("");
   const [USL, setUSL] = React.useState(100);
-// const [loading, setLoading] = React.useState(true);
 
 useEffect(() => {
   async function reqData() {
@@ -85,27 +79,6 @@ useEffect(() => {
 }, []);
 
 
-// useEffect(() => {
-//   async function reqdata() {
-//     try {
-//       const response = await fetch('http://localhost:3006/extremeshift');
-//       if (!response.ok) {
-//         alert("Data not received");
-//       } else {
-//         const data = await response.json(); // Parse response
-//         console.log("Extreme:", data.results[0].value);
-//         const shiftValue = data.results[0].value === "True"; 
-//         setExtremeShift(shiftValue);
-//       }
-//     } catch (error) {
-//       console.log("Data not fetched", error);
-//     } 
-//   }
-
-//   reqdata();
-// }, []); 
-
-
 useEffect(() => {
   async function reqdata() {
     console.log()
@@ -114,9 +87,9 @@ useEffect(() => {
     
           socketRef.current.onmessage = async (event) => {
             const data = JSON.parse(event.data);
-            console.log("Exterem:",data.ExtremeShift);
+            console.log("Exterem:",data.Extreme_shift);
            
-            setExtremeShift(data.ExtremeShift);
+            setExtremeShift(data.Extreme_shift);
           } 
   }
 }
@@ -247,39 +220,7 @@ reqdata();
         </p>
        
       </TabPanel>      
-                    
 
-
-                
-      {/* {extremeshift ?  <ScrollingWarning/> : <div
-      style={{
-        top: "50px",
-        height: "50px",
-        overflow: "hidden",
-        position: "relative",
-        background: "#212529",
-        color: "yellow",
-      }}
-    ></div>} */}
-
-   
-
-{/* {extremeshift === "False" && (
-     <>
-     <div
-      style={{
-        top: "50px",
-        height: "50px",
-        overflow: "hidden",
-        position: "relative",
-        background: "#212529",
-        color: "yellow",
-      }}
-    ></div>
-
-     
-     </>
-    )} */}
     <div style={{ display: "flex", marginLeft: "-150px", justifyContent: "center", gap: "20px", marginTop: "60px" }}>
      <button className='text-center text-dark pb-3 mb-0'
          style={{
